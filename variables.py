@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-
+PAY_TOKEN = '410694247:TEST:706675bb-1b2b-4f1d-8b6a-2201002ca1f4'
 API_TOKEN='6053290916:AAFutZWUeod-FpJnOHb8lW9d_GQJpSt0t50'
 MY_ID=840550973
 CHANNELS_ID=-1001557123971

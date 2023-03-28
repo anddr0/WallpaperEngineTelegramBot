@@ -4,6 +4,9 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.types import ContentType
+
+import variables
 from db import db_start, create_profile, edit_num_of_walls, edit_posted, get_stats, get_top, get_id
 from variables import API_TOKEN, WALLS_CHAT, CHANNELS_ID, MY_ID, inline_keyboard, stats_keyboard
 
