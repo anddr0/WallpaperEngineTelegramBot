@@ -65,15 +65,16 @@ async def send_wallpaper(callback: types.CallbackQuery):
 @dp.message_handler(state=Form.get_media, content_types=['photo', 'video', 'document'])
 async def media_awaiting(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
+        caption = message.caption if message.caption is not None else ""
         if message.content_type == 'photo':
             photo = message.photo[0].file_id
-            await bot.send_photo(chat_id=WALLS_CHAT, photo=photo, caption=message.caption + "\n" + message.chat.username)
+            await bot.send_photo(chat_id=WALLS_CHAT, photo=photo, caption=caption + "\n" + message.chat.username)
         elif message.content_type == 'video':
             video = message['video']['file_id']
-            await bot.send_video(chat_id=WALLS_CHAT, video=video, caption=message.caption + "\n" + message.chat.username)
+            await bot.send_video(chat_id=WALLS_CHAT, video=video, caption=caption + "\n" + message.chat.username)
         elif message.content_type == 'document':
             doc = message['document']['file_id']
-            await bot.send_document(chat_id=WALLS_CHAT, document=doc, caption=message.caption + "\n" + message.chat.username)
+            await bot.send_document(chat_id=WALLS_CHAT, document=doc, caption=caption + "\n" + message.chat.username)
 
     await edit_num_of_walls(username=message.chat.username)
     await message.answer("✅<b>Success!</b>\nYour wallpaper has been sent for <b>moderation.</b>"
