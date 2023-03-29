@@ -67,7 +67,7 @@ async def media_awaiting(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         caption = message.caption if message.caption is not None else ""
         if message.content_type == 'photo':
-            photo = message.photo[0].file_id
+            photo = message.photo[0].file_id 
             await bot.send_photo(chat_id=WALLS_CHAT, photo=photo, caption=caption + "\n" + message.chat.username)
         elif message.content_type == 'video':
             video = message['video']['file_id']
@@ -101,9 +101,9 @@ async def send_user_status(callback: types.CallbackQuery):
 async def send_user_status(callback: types.CallbackQuery):
     await callback.message.delete()
     top = await get_top()
-    val = 0
+    val = 0 
     str_to_print = ""
-    for i in sorted(top, key=lambda x: x[3], reverse=True):
+    for i in sorted(top, key=lambda x: x[4], reverse=True):
         if val < 5:
             str_to_print += f'<b>{i[2]}</b> <b>[{i[5]}]</b>: ' \
                             f'\n<i>posted</i> - <b>{i[4]}</b> <b>|</b> <i>sent wallpapers</i> - <b>{i[3]}</b>\n\n'
