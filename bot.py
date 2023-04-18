@@ -4,9 +4,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.types import ContentType
 
-import variables
 from db import db_start, create_profile, edit_num_of_walls, edit_posted, get_stats, get_top, get_id
 from variables import API_TOKEN, WALLS_CHAT, CHANNELS_ID, MY_ID, inline_keyboard, stats_keyboard
 
@@ -101,15 +99,13 @@ async def send_user_status(callback: types.CallbackQuery):
 async def send_user_status(callback: types.CallbackQuery):
     await callback.message.delete()
     top = await get_top()
-    val = 0 
     str_to_print = ""
-    for i in sorted(top, key=lambda x: x[4], reverse=True):
-        if val < 5:
-            str_to_print += f'<b>{i[2]}</b> <b>[{i[5]}]</b>: ' \
-                            f'\n<i>posted</i> - <b>{i[4]}</b> <b>|</b> <i>sent wallpapers</i> - <b>{i[3]}</b>\n\n'
-            val += 1
-        else:
-            break
+    sorted_top = sorted(sorted(top, key=lambda x: x[3], reverse=True), key=lambda x: x[4], reverse=True)
+    length = len(top) if len(top) < 5 else 5
+    for num in range(length):
+        i = sorted_top[num]
+        str_to_print += f'<b>{i[2]}</b> <b>[{i[5]}]</b>: ' \
+                        f'\n<i>posted</i> - <b>{i[4]}</b> <b>|</b> <i>sent wallpapers</i> - <b>{i[3]}</b>\n\n'
     await callback.message.answer(str_to_print, parse_mode='html', reply_markup=inline_keyboard)
 
 
