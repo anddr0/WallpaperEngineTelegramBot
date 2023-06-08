@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 
 # -------------------------------------ID'S, TOKENS-------------------------------------
-API_TOKEN = '5420690904:AAH6Cs5cJkSk4OJPQ5YTbVv2jOB8HwKYv90'
+API_TOKEN = '6053290916:AAFutZWUeod-FpJnOHb8lW9d_GQJpSt0t50'
 MY_ID = 840550973
 CHANNELS_ID = -1001557123971
 WALLS_CHAT = -855257472
