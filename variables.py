@@ -1,44 +1,35 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 
-PAY_TOKEN = '410694247:TEST:706675bb-1b2b-4f1d-8b6a-2201002ca1f4'
-API_TOKEN='6053290916:AAFutZWUeod-FpJnOHb8lW9d_GQJpSt0t50'
-MY_ID=840550973
-CHANNELS_ID=-1001557123971
-WALLS_CHAT=-855257472
-
-RANKS = ['Newbie🔰', 'Wallpaper 🖼', 'Artisan🧑‍🎨', 'Wallpaperist🎨', 'Enthusiast🤩', 'Decorator🎉', 'Master👨‍🎓',
+# -------------------------------------ID'S, TOKENS-------------------------------------
+API_TOKEN = '5420690904:AAH6Cs5cJkSk4OJPQ5YTbVv2jOB8HwKYv90'
+MY_ID = 840550973
+CHANNELS_ID = -1001557123971
+WALLS_CHAT = -855257472
+# -------------------------------------FOR MESSAGES-------------------------------------
+# Emoji of user in top 5
+status = ["👑", "💎", "⭐️", "🥶", "🥵"]
+# Ranks
+RANKS = ['Newbie🔰', 'Wallpaper🖼', 'Artisan🧑‍🎨', 'Wallpaperist🎨', 'Enthusiast🤩', 'Decorator🎉', 'Master👨‍🎓',
          'Wizard🧙‍♂️', 'Connoisseur👑', 'Emperor🤴', 'God🙌']
-
-
-def ranks_check(num):
-    if num in range(5):
-        return RANKS[0]
-    elif num in range(5, 10):
-        return RANKS[1]
-    elif num in range(10, 20):
-        return RANKS[2]
-    elif num in range(20, 30):
-        return RANKS[3]
-    elif num in range(30, 40):
-        return RANKS[4]
-    elif num in range(40, 50):
-        return RANKS[5]
-    elif num in range(50, 70):
-        return RANKS[6]
-    elif num in range(70, 100):
-        return RANKS[7]
-    elif num in range(100, 150):
-        return RANKS[8]
-    elif num in range(150, 200):
-        return RANKS[9]
-    else:
-        return RANKS[10]
-
-
+# -------------------------------------KEYBOARDS-------------------------------------
 # /start, /help Keyboard
 send_button = InlineKeyboardButton(text="Send wallpaper✉️", callback_data="send_wallpaper")
 stats_button = InlineKeyboardButton(text="My stats📈", callback_data="stats")
-sent_button = InlineKeyboardButton(text="Top 5 ranks🏆", callback_data="top_5")
+sent_button = InlineKeyboardButton(text="Top 5 wallpaperists🏆", callback_data="top_5")
 inline_keyboard = InlineKeyboardMarkup(row_width=2).add(send_button, stats_button, sent_button)
 
-stats_keyboard = InlineKeyboardMarkup().add(stats_button)
+# Cancel send wallpaper keyboard
+cancel_keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).add(KeyboardButton("Cancel"))
+
+# Remove reply keyboard
+remove_keyboard = ReplyKeyboardRemove()
+
+# Moderation keyboard
+approved_button = InlineKeyboardButton(text="✅ Approve", callback_data="approve_wallpaper")
+declined_button = InlineKeyboardButton(text="🚫 Decline", callback_data="decline_wallpaper")
+moderation_keyboard = InlineKeyboardMarkup().add(approved_button, declined_button)
+
+# Post all users keyboard
+post = InlineKeyboardButton(text="✅ Post", callback_data="posting")
+do_not_post = InlineKeyboardButton(text="🚫 Do not post", callback_data="not_posting")
+check_post_keyboard = InlineKeyboardMarkup().add(post, do_not_post)

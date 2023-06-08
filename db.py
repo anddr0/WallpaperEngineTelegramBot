@@ -1,5 +1,7 @@
 import sqlite3 as sq
-from variables import ranks_check
+from pickle import dumps, loads
+
+# -------------------------------------START DB, END DB-------------------------------------
 
 
 async def db_start():
@@ -9,47 +11,60 @@ async def db_start():
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS "
-                "users(username TEXT PRIMARY KEY, user_id TEXT,"
-                "first_name TEXT, num_of_walls INTEGER, posted_wallpapers INTEGER, rank TEXT)")
+                "users(user_id INTEGER PRIMARY KEY, username TEXT, user_data BLOB)")
     db.commit()
+
+
+async def close():
+    db.close()
 
 # -------------------------------------CREATE PROFILE-------------------------------------
 
 
-async def create_profile(user_id, username, first_name):
-    user = cur.execute("SELECT 1 FROM users WHERE username == '{key}'".format(key=username)).fetchone()
+async def create_profile(user_id, username, user_data):
+    user = cur.execute(f"SELECT 1 FROM users WHERE user_id == '{user_id}'").fetchone()
     if not user:
-        cur.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)", (username, user_id, first_name, 0, 0, 'Newbie🔰'))
+        cur.execute("INSERT INTO users VALUES(?, ?, ?)", (user_id, username, dumps(user_data)))
         db.commit()
 
 # -------------------------------------EDIT PROFILE-------------------------------------
 
 
-async def edit_posted(username):
-    cur.execute("UPDATE users SET posted_wallpapers = posted_wallpapers + 1 WHERE username = '{}'".format(username))
-    num = cur.execute("SELECT posted_wallpapers FROM users WHERE username = '{}'".format(username)).fetchone()[0]
-    rank = ranks_check(num)
-    cur.execute("UPDATE users SET rank = '{}' WHERE username = '{}'".format(rank, username))
+async def sent_increase(user_id):
+    user = await get_user_data(user_id)
+    user.increase_sent()
+    await update_user_data(user_id, user)
     db.commit()
 
 
-async def edit_num_of_walls(username):
-    cur.execute("UPDATE users SET num_of_walls = num_of_walls + 1 WHERE username = '{}'".format(username))
+async def posted_increase(user_id):
+    user = await get_user_data(user_id)
+    user.increase_posted()
+    await update_user_data(user_id, user)
     db.commit()
 
 # -------------------------------------GETTERS-------------------------------------
 
 
-async def get_top():
-    top = cur.execute("SELECT * FROM users").fetchall()
-    return top
+async def get_user_data(user_id):
+    return loads(cur.execute(f"SELECT user_data FROM users WHERE user_id = '{user_id}'").fetchone()[0])
 
 
-async def get_stats(username):
-    stats = cur.execute("SELECT num_of_walls, posted_wallpapers, rank FROM users WHERE username = '{}'".format(username)).fetchone()
-    return stats
+async def get_all_users():
+    user_id_name = cur.execute(f"SELECT user_id, username FROM users").fetchall()
+    user_data = cur.execute(f"SELECT user_data FROM users").fetchall()
+    users = []
+    for i in range(len(user_id_name)):
+        users.append((user_id_name[i][0], user_id_name[i][1], loads(user_data[i][0])))
+    return users
 
 
-async def get_id(username):
-    user_id = cur.execute("SELECT user_id FROM users WHERE username = '{}'".format(username)).fetchone()
-    return user_id
+async  def get_ids():
+    return cur.execute(f"SELECT user_id FROM users").fetchall()
+
+# -------------------------------------UPDATERS-------------------------------------
+
+
+async def update_user_data(user_id, user):
+    cur.execute(f"UPDATE users SET user_data = ? WHERE user_id = ?", (dumps(user), user_id))
+    db.commit()
