@@ -1,10 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 
 # -------------------------------------ID'S, TOKENS-------------------------------------
-API_TOKEN = '6053290916:AAFutZWUeod-FpJnOHb8lW9d_GQJpSt0t50'
-MY_ID = 840550973
-CHANNELS_ID = -1001557123971
-WALLS_CHAT = -855257472
+API_TOKEN = 'Your token'
+MY_ID = 0   # Your telegram id
+WALLS_CHAT = 0  # Your group chat
 # -------------------------------------FOR MESSAGES-------------------------------------
 # Emoji of user in top 5
 status = ["👑", "💎", "⭐️", "🥶", "🥵"]
