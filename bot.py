@@ -40,6 +40,7 @@ async def on_shutdown(_):
 
 @dp.message_handler(commands=['start', 'menu'])
 async def start_handler(message: types.Message):
+    logging.info("Processing command start")
     await message.delete()
     username = message['chat']['username']
     user_id = message.chat.id
@@ -59,6 +60,7 @@ async def start_handler(message: types.Message):
 
 @dp.callback_query_handler(text="send_wallpaper")
 async def send_wallpaper(callback: types.CallbackQuery):
+    logging.info("Processing sending wallpaper")
     await Form.get_media.set()
     await callback.message.answer("📩 Send <b>photo</b> / <b>video</b> / <b>file</b> of your wallpaper",
                                   reply_markup=cancel_keyboard, parse_mode="html")
@@ -99,6 +101,7 @@ async def cancel_send_media(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text="approve_wallpaper")
 async def approving_wallpaper(callback: types.CallbackQuery):
+    logging.info("Approving user wallpaper")
     caption = callback.message.caption.split("|")
     await callback.message.edit_reply_markup(None)
     await callback.message.reply("✅ This wallpaper has been approved")
@@ -111,6 +114,7 @@ async def approving_wallpaper(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(text="decline_wallpaper")
 async def declining_wallpaper(callback: types.CallbackQuery):
+    logging.info("Declining user wallpaper")
     caption = callback.message.caption.split("|")
     await callback.message.edit_reply_markup(None)
     await callback.message.reply("🚫 This wallpaper has been declined", reply_markup=remove_keyboard)
@@ -124,6 +128,7 @@ async def declining_wallpaper(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(text="stats")
 async def send_user_status(callback: types.CallbackQuery):
+    logging.info("Sending stats to user")
     user_data = (await get_user_data(callback.message.chat.id)).get_stats()
     await callback.message.edit_text(f'◼️◼️<b>STATISTIC</b>◼️◼️\n\n'
                                      f'| <i>📨 Sent wallpapers:</i> <b>{user_data[2]}</b>,\n|'
@@ -140,6 +145,7 @@ def check_username(user):
 
 
 async def get_top_5():
+    logging.info("Sending to user top 5")
     users = await get_all_users()
     str_to_send = ""
     sorted_users = list(filter(check_username, sorted(users, key=lambda x: (x[2].posted_walls, x[2].sent_walls), reverse=True)))
@@ -165,6 +171,7 @@ async def send_user_status(callback: types.CallbackQuery):
 
 @dp.message_handler(commands=['send_message', 's_m'])
 async def send_message_to_all_users(message: types.Message):
+    logging.info("Processing command send message to all users")
     if message.chat.id == MY_ID:
         await Form.message.set()
         await message.delete()
@@ -223,6 +230,7 @@ async def posting(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.message_handler(commands=['send_database', 's_db'])
 async def send_database(message: types.Message):
+    logging.info("Processing command send database")
     await message.delete()
     if message.chat.id == MY_ID:
         try:
