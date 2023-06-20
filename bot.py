@@ -141,7 +141,7 @@ async def send_user_status(callback: types.CallbackQuery):
 
 
 def check_username(user):
-    return user[1] is not None
+    return user[2].first_name is not None
 
 
 async def get_top_5():
@@ -152,7 +152,8 @@ async def get_top_5():
     length = len(sorted_users) if len(sorted_users) < 5 else 5
     for i in range(length):
         user = sorted_users[i]
-        str_to_send += f'\n{i + 1}: {status[i]} <a href = "tg://user?id={user[0]}">{user[1]}</a>' \
+        name_to_print = user[1] if user[1] is not None else user[2].first_name
+        str_to_send += f'\n{i + 1}: {status[i]} <a href = "tg://user?id={user[0]}">{name_to_print}</a>' \
                        f'\n-------------------------------' \
                        f'\n|<i>Posted wallpapers</i>: <b>{user[2].posted_walls}</b>' \
                        f'\n|<i>Sent wallpapers</i>: <b>{user[2].sent_walls}</b>' \
