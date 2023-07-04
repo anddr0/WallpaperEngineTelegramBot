@@ -1,9 +1,9 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 
 # -------------------------------------ID'S, TOKENS-------------------------------------
-API_TOKEN = 'Test'
-MY_ID = 0
-WALLS_CHAT = -0
+API_TOKEN = '6344045610:AAE27jD-wsl2aD3FPd7vlKDDD7W7JH-zFbI'
+MY_ID = 840550973
+WALLS_CHAT = -855257472
 # -------------------------------------FOR MESSAGES-------------------------------------
 # Emoji of user in top 5
 status = ["👑", "💎", "⭐️", "🥶", "🥵"]
