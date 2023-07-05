@@ -14,11 +14,11 @@ class User:
 
     def increase_posted(self):
         self.posted_walls += 1
-        self.rank_update()
+        self.user_update()
 
     def increase_sent(self):
         self.sent_walls += 1
-        self.rank_update()
+        self.user_update()
 
     def rank_update(self):
         if self.posted_walls in range(5):
@@ -49,6 +49,7 @@ class User:
         self.last_activity_date = datetime.datetime.now()
 
     def get_stats(self):
+        self.user_update()
         return self.first_name, self.rank, str(self.sent_walls), str(self.posted_walls), \
                self.create_date, self.last_activity_date, self.language_code
 
