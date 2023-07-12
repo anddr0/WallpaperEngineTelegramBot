@@ -1,4 +1,5 @@
 import datetime
+import json
 from variables import RANKS
 
 
@@ -51,7 +52,31 @@ class User:
     def get_stats(self):
         self.user_update()
         return self.first_name, self.rank, str(self.sent_walls), str(self.posted_walls), \
-               self.create_date, self.last_activity_date, self.language_code
+            self.create_date, self.last_activity_date, self.language_code
+
+    def to_json(self):
+        data = {
+            "first_name": self.first_name,
+            "create_date": self.create_date.isoformat(),
+            "last_activity_date": self.last_activity_date.isoformat(),
+            "rank": self.rank,
+            "sent_walls": self.sent_walls,
+            "posted_walls": self.posted_walls,
+            "language_code": self.language_code
+        }
+        return json.dumps(data)
+
+    @classmethod
+    def from_dict(cls, data):
+        user = cls()
+        user.first_name = data.get("first_name", "")
+        user.create_date = datetime.datetime.fromisoformat(data.get("create_date"))
+        user.last_activity_date = datetime.datetime.fromisoformat(data.get("last_activity_date"))
+        user.rank = data.get("rank", "Newbie🔰")
+        user.sent_walls = data.get("sent_walls", 0)
+        user.posted_walls = data.get("posted_walls", 0)
+        user.language_code = data.get("language_code", "en")
+        return user
 
     def __repr__(self):
         return f"First name: {self.first_name} | Rank: {self.rank}" \

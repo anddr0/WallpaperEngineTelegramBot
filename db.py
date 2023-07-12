@@ -1,31 +1,32 @@
-import sqlite3 as sq
-from pickle import dumps, loads
+import os
+import json
+import supabase
+from dotenv import load_dotenv
+
+from user_class import User
 
 # -------------------------------------START DB, END DB-------------------------------------
+load_dotenv()
 
 
 async def db_start():
-    global db, cur
-
-    db = sq.connect('users.db')
-    cur = db.cursor()
-
-    cur.execute("CREATE TABLE IF NOT EXISTS "
-                "users(user_id INTEGER PRIMARY KEY, username TEXT, user_data BLOB)")
-    db.commit()
+    global sb
+    sb = supabase.create_client(os.getenv("URL"), os.getenv("KEY"))
 
 
 async def close():
-    db.close()
+    sb.auth.close()
 
 # -------------------------------------CREATE PROFILE-------------------------------------
 
 
 async def create_profile(user_id, username, user_data):
-    user = cur.execute(f"SELECT 1 FROM users WHERE user_id == '{user_id}'").fetchone()
+    user = sb.table("user_data").select("user_id").eq("user_id", f"{user_id}").execute().data
     if not user:
-        cur.execute("INSERT INTO users VALUES(?, ?, ?)", (user_id, username, dumps(user_data)))
-        db.commit()
+        sb.table("user_data").insert({"user_id": f"{user_id}",
+                                      "username": f"{username}",
+                                      "user_data": f"{user_data.to_json()}"}).execute()
+
 
 # -------------------------------------EDIT PROFILE-------------------------------------
 
@@ -34,37 +35,38 @@ async def sent_increase(user_id):
     user = await get_user_data(user_id)
     user.increase_sent()
     await update_user_data(user_id, user)
-    db.commit()
 
 
 async def posted_increase(user_id):
     user = await get_user_data(user_id)
     user.increase_posted()
     await update_user_data(user_id, user)
-    db.commit()
 
 # -------------------------------------GETTERS-------------------------------------
 
 
 async def get_user_data(user_id):
-    return loads(cur.execute(f"SELECT user_data FROM users WHERE user_id = '{user_id}'").fetchone()[0])
+    return User.from_dict(json.loads(sb.table("user_data").select("user_data")
+                                     .eq("user_id", user_id).execute().data[0]["user_data"]))
 
 
 async def get_all_users():
-    user_id_name = cur.execute(f"SELECT user_id, username FROM users").fetchall()
-    user_data = cur.execute(f"SELECT user_data FROM users").fetchall()
-    users = []
-    for i in range(len(user_id_name)):
-        users.append((user_id_name[i][0], user_id_name[i][1], loads(user_data[i][0])))
-    return users
+    data = sb.table("user_data").select("*").execute().data
+    for user in data:
+        if user["user_data"]:
+            user_obj = User.from_dict(json.loads(
+                sb.table("user_data").select("user_data")
+                .eq("user_id", user['user_id']).execute().data[0]["user_data"]))
+            user["user_data"] = user_obj
+    return data
 
 
-async  def get_ids():
-    return cur.execute(f"SELECT user_id FROM users").fetchall()
+async def get_ids():
+    return sb.table("user_data").select("user_id").execute().data
 
 # -------------------------------------UPDATERS-------------------------------------
 
 
 async def update_user_data(user_id, user):
-    cur.execute(f"UPDATE users SET user_data = ? WHERE user_id = ?", (dumps(user), user_id))
-    db.commit()
+    sb.table("user_data").update({"user_data": user.to_json()}).eq("user_id", user_id).execute()
+

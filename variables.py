@@ -1,15 +1,25 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 
-# -------------------------------------ID'S, TOKENS-------------------------------------
-API_TOKEN = '6344045610:AAE27jD-wsl2aD3FPd7vlKDDD7W7JH-zFbI'
-MY_ID = 840550973
-WALLS_CHAT = -855257472
 # -------------------------------------FOR MESSAGES-------------------------------------
 # Emoji of user in top 5
 status = ["👑", "💎", "⭐️", "🥶", "🥵"]
 # Ranks
 RANKS = ['Newbie🔰', 'Wallpaper🖼', 'Artisan🧑‍🎨', 'Wallpaperist🎨', 'Enthusiast🤩', 'Decorator🎉', 'Master👨‍🎓',
          'Wizard🧙‍♂️', 'Connoisseur👑', 'Emperor🤴', 'God🙌']
+HELP = """
+ℹ️ INFORMATION ℹ️
+
+<code>|Send wallpaper✉️|</code> - <i>using this button you can send for moderation your wallpapers</i>
+-----------------------
+<code>|My stats📈|</code> - <i>find out how many wallpapers you've sent, how many have been posted to the channel, \
+ and your current rank!</i>
+-----------------------
+<code>|Top 5 wallpaperists🏆|</code> - <i>stats of top 5 best users</i>
+-----------------------
+<code>|/menu|</code> - <i>button that send you message with available buttons</i>
+-----------------------
+<code>|/info|</code> - <i>button that send you message with info about available actions</i>
+"""
 # -------------------------------------KEYBOARDS-------------------------------------
 # /start, /help Keyboard
 send_button = InlineKeyboardButton(text="Send wallpaper✉️", callback_data="send_wallpaper")
