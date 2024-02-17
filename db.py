@@ -1,9 +1,8 @@
+import datetime
 import os
-import json
 import supabase
 from dotenv import load_dotenv
-
-from user_class import User
+from variables import RANKS
 
 # -------------------------------------START DB, END DB-------------------------------------
 load_dotenv()
@@ -20,53 +19,74 @@ async def close():
 # -------------------------------------CREATE PROFILE-------------------------------------
 
 
-async def create_profile(user_id, username, user_data):
-    user = sb.table("user_data").select("user_id").eq("user_id", f"{user_id}").execute().data
+async def create_profile(user_id, username, first_name, language_code):
+    user = sb.table("user_data_v2").select("user_id").eq("user_id", f"{user_id}").execute().data
     if not user:
-        sb.table("user_data").insert({"user_id": f"{user_id}",
-                                      "username": f"{username}",
-                                      "user_data": f"{user_data.to_json()}"}).execute()
+        sb.table("user_data_v2").insert({"user_id": f"{user_id}",
+                                         "username": f"{username}",
+                                         "first_name": f"{first_name}",
+                                         "created": f"{datetime.datetime.now()}",
+                                         "last_activity": f"{datetime.datetime.now()}",
+                                         "rank": f"{'Newbie🔰'}",
+                                         "sent": f"{0}",
+                                         "posted": f"{0}",
+                                         "language_code": f"{language_code}"}).execute()
 
 
-# -------------------------------------EDIT PROFILE-------------------------------------
+# -------------------------------------GETTERS------------------------------------
 
 
-async def sent_increase(user_id):
-    user = await get_user_data(user_id)
-    user.increase_sent()
-    await update_user_data(user_id, user)
+async def get_top_5():
+    return sb.table("user_data_v2").select("*").order("posted", desc=True).limit(5).execute().data
 
-
-async def posted_increase(user_id):
-    user = await get_user_data(user_id)
-    user.increase_posted()
-    await update_user_data(user_id, user)
-
-# -------------------------------------GETTERS-------------------------------------
-
-
-async def get_user_data(user_id):
-    return User.from_dict(json.loads(sb.table("user_data").select("user_data")
-                                     .eq("user_id", user_id).execute().data[0]["user_data"]))
-
-
-async def get_all_users():
-    data = sb.table("user_data").select("*").execute().data
-    for user in data:
-        if user["user_data"]:
-            user_obj = User.from_dict(json.loads(
-                sb.table("user_data").select("user_data")
-                .eq("user_id", user['user_id']).execute().data[0]["user_data"]))
-            user["user_data"] = user_obj
-    return data
-
+async def get_stats(user_id):
+    return sb.table("user_data_v2").select("*").eq("user_id", f"{user_id}").execute().data
 
 async def get_ids():
-    return sb.table("user_data").select("user_id").execute().data
+    return sb.table("user_data_v2").select("user_id").execute().data
 
 # -------------------------------------UPDATERS-------------------------------------
 
 
-async def update_user_data(user_id, user):
-    sb.table("user_data").update({"user_data": user.to_json()}).eq("user_id", user_id).execute()
+async def sent_increase(user_id):
+    sent = sb.table("user_data_v2").select("sent").eq("user_id", user_id).execute().data[0]["sent"]
+    sb.table("user_data_v2").update({"sent": sent + 1}).eq("user_id", user_id).execute()
+
+
+async def posted_increase(user_id):
+    posted = sb.table("user_data_v2").select("posted").eq("user_id", user_id).execute().data[0]["posted"]
+    sb.table("user_data_v2").update({"posted": posted + 1}).eq("user_id", user_id).execute()
+    await rank_update(user_id)
+
+
+async def activity_update(user_id):
+    sb.table("user_data_v2").update({"last_activity": f"{datetime.datetime.now()}"}).eq("user_id", user_id).execute()
+
+
+async def rank_update(user_id):
+    posted = sb.table("user_data_v2").select("posted").eq("user_id", f"{user_id}").execute().data[0]["posted"]
+    if posted in range(5):
+        rank = RANKS[0]
+    elif posted in range(5, 10):
+        rank = RANKS[1]
+    elif posted in range(10, 20):
+        rank = RANKS[2]
+    elif posted in range(20, 30):
+        rank = RANKS[3]
+    elif posted in range(30, 40):
+        rank = RANKS[4]
+    elif posted in range(40, 50):
+        rank = RANKS[5]
+    elif posted in range(50, 70):
+        rank = RANKS[6]
+    elif posted in range(70, 100):
+        rank = RANKS[7]
+    elif posted in range(100, 150):
+        rank = RANKS[8]
+    elif posted in range(150, 200):
+        rank = RANKS[9]
+    else:
+        rank = RANKS[10]
+    sb.table("user_data_v2").update({"rank": rank}).eq("user_id", user_id).execute()
+
 

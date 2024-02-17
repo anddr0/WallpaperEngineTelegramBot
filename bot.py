@@ -6,11 +6,11 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from db import db_start, close, create_profile, sent_increase, posted_increase, get_user_data, get_all_users, get_ids
+import db
+from db import db_start, close, create_profile, sent_increase, posted_increase, get_ids, get_stats, activity_update
 from variables import inline_keyboard, status, cancel_keyboard, remove_keyboard, moderation_keyboard,\
     check_post_keyboard, HELP
 
-from user_class import User
 from dotenv import load_dotenv
 
 # Configure logging
@@ -38,21 +38,29 @@ async def on_shutdown(_):
     await close()
 
 
-# -------------------------------------/start-------------------------------------
+# -------------------------------------/start, menu-------------------------------------
 
 
-@dp.message_handler(commands=['start', 'menu'])
+@dp.message_handler(commands=['start'])
 async def start_handler(message: types.Message):
     logging.info("Processing command start")
     await message.delete()
     username = message['chat']['username']
     user_id = message.chat.id
-    user_data = User(first_name=message['chat']['first_name'], language_code=message["from"]["language_code"])
-    await create_profile(user_id, username, user_data)
+    await create_profile(user_id, username, message['chat']['first_name'], message["from"]["language_code"])
     if message.chat.type != "private":
         await message.answer("❗️<b>Warning</b>❗️"
                              "\n<i>We are sorry, but when bot is in <b>group</b> it does not displays on rank.</i>  ️"
                              "\nIf you are 🆗 with this - continue", parse_mode="html")
+    await message.answer("<b>Hello!</b>👋😊\n<i>This is a bot where you can share your favorite wallpaper, "
+                         "and compete with other people in wallpaper coolness!</i> 😁",
+                         reply_markup=inline_keyboard, parse_mode="html")
+    await message.answer("/info - information about bot")
+
+
+@dp.message_handler(commands=['menu'])
+async def menu_handler(message: types.Message):
+    await activity_update(message.chat.id)
     await message.answer("<b>Hello!</b>👋😊\n<i>This is a bot where you can share your favorite wallpaper, "
                          "and compete with other people in wallpaper coolness!</i> 😁",
                          reply_markup=inline_keyboard, parse_mode="html")
@@ -62,14 +70,17 @@ async def start_handler(message: types.Message):
 
 @dp.message_handler(commands=['help', 'info'])
 async def help_handler(message: types.Message):
+    await activity_update(message.chat.id)
     logging.info("Processing command help")
     await message.answer(HELP, parse_mode="html")
+
 
 # -------------------------------------Send media-------------------------------------
 
 
 @dp.callback_query_handler(text="send_wallpaper")
 async def send_wallpaper(callback: types.CallbackQuery):
+    await activity_update(callback.message.chat.id)
     logging.info("Processing sending wallpaper")
     await Form.get_media.set()
     await callback.message.answer("📩 Send <b>photo</b> / <b>video</b> / <b>file</b> of your wallpaper",
@@ -112,19 +123,25 @@ async def cancel_send_media(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(text="approve_wallpaper")
 async def approving_wallpaper(callback: types.CallbackQuery):
+    await activity_update(callback.message.chat.id)
     logging.info("Approving user wallpaper")
-    caption = callback.message.caption.split("|")
+    user_id, username = callback.message.caption.split("|")
     await callback.message.edit_reply_markup(None)
     await callback.message.reply("✅ This wallpaper has been approved")
     await callback.message.pin()
-    await posted_increase(caption[0])
-    await bot.copy_message(chat_id=caption[0], from_chat_id=callback.message.chat.id,
+    await posted_increase(user_id)
+    await bot.copy_message(chat_id=user_id, from_chat_id=callback.message.chat.id,
                            message_id=callback.message.message_id,
                            caption="✅ <i>Your wallpaper has been <b>approved!</b></i>😊", parse_mode="html")
+    stats = (await get_stats(user_id))[0]
+    await bot.copy_message(chat_id=-1001768811954, from_chat_id=callback.message.chat.id,
+                           message_id=callback.message.message_id, parse_mode="html",
+                           caption=f"<a href='tg://user?id={user_id}'>{username}</a> <b>[ {stats['rank']} ]</b>")
 
 
 @dp.callback_query_handler(text="decline_wallpaper")
 async def declining_wallpaper(callback: types.CallbackQuery):
+    await activity_update(callback.message.chat.id)
     logging.info("Declining user wallpaper")
     caption = callback.message.caption.split("|")
     await callback.message.edit_reply_markup(None)
@@ -139,13 +156,14 @@ async def declining_wallpaper(callback: types.CallbackQuery):
 
 @dp.callback_query_handler(text="stats")
 async def send_user_status(callback: types.CallbackQuery):
+    await activity_update(callback.message.chat.id)
     logging.info("Sending stats to user")
-    user_data = (await get_user_data(callback.message.chat.id)).get_stats()
+    user_data = (await db.get_stats(callback.message.chat.id))[0]
     await callback.message.edit_text(f'⚡️️<b>STATISTIC</b>️⚡️'
                                      f'\n-------------------------'
-                                     f'\n| <i>📨 Sent wallpapers:</i> <b>{user_data[2]}</b>,\n|'
-                                     f'\n| <i>🖼 Posted wallpapers:</i> <b>{user_data[3]}</b>,\n|'
-                                     f'\n| <i>🥇 Current rank:</i> <b>{user_data[1]}</b>\n',
+                                     f'\n| <i>📨 Sent wallpapers:</i> <b>{user_data["sent"]}</b>,\n|'
+                                     f'\n| <i>🖼 Posted wallpapers:</i> <b>{user_data["posted"]}</b>,\n|'
+                                     f'\n| <i>🥇 Current rank:</i> <b>{user_data["rank"]}</b>\n',
                                      reply_markup=inline_keyboard, parse_mode="html")
 
 
@@ -157,27 +175,25 @@ def check_username(user):
 
 
 async def get_top_5():
-    logging.info("Sending to user top 5")
-    users = await get_all_users()
-    str_to_send = ""
-    sorted_users = list(filter(check_username,
-                               sorted(users, key=lambda x: (x["user_data"].posted_walls, x["user_data"].sent_walls),
-                                      reverse=True)))
+    sorted_users = await db.get_top_5()
     length = len(sorted_users) if len(sorted_users) < 5 else 5
+    str_to_send = ""
     for i in range(length):
         user = sorted_users[i]
-        name_to_print = user["username"] if user["username"] is not None else user["user_data"].first_name
+        print(user["user_id"])
+        name_to_print = user["username"] if user["username"] is not None else user["first_name"]
         str_to_send += f'\n{i + 1}: {status[i]} <a href = "tg://user?id={user["user_id"]}">{name_to_print}</a>' \
                        f'\n-------------------------------' \
-                       f'\n|<i>Posted wallpapers</i>: <b>{user["user_data"].posted_walls}</b>' \
-                       f'\n|<i>Sent wallpapers</i>: <b>{user["user_data"].sent_walls}</b>' \
-                       f'\n|<i>Rank</i>: <b>{user["user_data"].rank}</b> \n'
+                       f'\n|<i>Posted wallpapers</i>: <b>{user["posted"]}</b>' \
+                       f'\n|<i>Sent wallpapers</i>: <b>{user["sent"]}</b>' \
+                       f'\n|<i>Rank</i>: <b>{user["rank"]}</b> \n'
 
     return "It's empty here..." if str_to_send == "" else str_to_send
 
 
 @dp.callback_query_handler(text="top_5")
 async def send_user_status(callback: types.CallbackQuery):
+    await activity_update(callback.message.chat.id)
     await callback.message.edit_text(await get_top_5(), parse_mode='html', reply_markup=inline_keyboard)
 
 
